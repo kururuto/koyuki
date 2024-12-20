@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koyuki</title>
+    <style>
+        body {
+            margin: 0;
+            height: 200vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: backgroundAnimation 5s infinite;
+        }
+        
+        @keyframes backgroundAnimation {
+            0% { background-color: #000; }
+            50% { background-color: #1a1a1a; }
+            100% { background-color: #000; }
+        }
+        
+        #followImage {
+            position: absolute;
+            width: 400px; 
+            transform: translate(-50%, -50%); 
+            animation: spin 1s linear infinite; 
+            cursor: none;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        h1 {
+            color: white;
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            z-index: 2;
+        }
+
+        #info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            z-index: 2; 
+            font-family: Arial, sans-serif;
+            font-size: 30px; 
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: red;
+            cursor: pointer;
+            z-index: 1; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to koyuki! <br>(Click A Lot!)</h1>
+    <img src="koyuki.png" id="followImage" alt="Koyuki" ondragstart="return false;">
+    <div id="info">
+        <div>Speed: <span id="speed">1.00</span> s</div>
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Score: <span id="score">0</span></div>
+    </div>
+
+    <script>
+        const image = document.getElementById('followImage');
+        const speedDisplay = document.getElementById('speed');
+        const fpsDisplay = document.getElementById('fps');
+        const scoreDisplay = document.getElementById('score');
+        let posX = 0;
+        let posY = 0;
+        let spinSpeed = 1; 
+        let clickCount = 0;
+        let fps = 0;
+        let lastTimestamp = 0;
+        let lastClickTime = 0;
+        let score = 0;
+        const minSpinSpeed = 0.1;
+
+        document.addEventListener('mousemove', (event) => {
+            posX += (event.pageX - posX) / 10;
+            posY += (event.pageY - posY) / 10;
+            image.style.left = `${posX}px`;
+            image.style.top = `${posY}px`;
+        });
+
+        image.addEventListener('click', () => {
+            clickCount++;
+            lastClickTime = performance.now(); 
+            spinSpeed = Math.max(spinSpeed * 0.9, minSpinSpeed); 
+            image.style.animationDuration = `${spinSpeed}s`;
+            speedDisplay.textContent = spinSpeed.toFixed(2);
+
+            image.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            setTimeout(() => {
+                image.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 200);
+
+            const sound = new Audio('aqua.mp3'); 
+            sound.play();
+
+        });
+
+        document.body.addEventListener('click', (event) => {
+            if (event.target !== image) {
+                clickCount++;
+                lastClickTime = performance.now(); 
+                spinSpeed = Math.max(spinSpeed * 0.9, minSpinSpeed); 
+                image.style.animationDuration = `${spinSpeed}s`;
+                speedDisplay.textContent = spinSpeed.toFixed(2);
+            }
+        });
+
+        function createCircle() {
+            const circle = document.createElement('div');
+            const size = Math.random() * 50 + 20; 
+            circle.style.width = `${size}px`;
+            circle.style.height = `${size}px`;
+            circle.classList.add('circle');
+
+            const x = Math.random() * (window.innerWidth - size);
+            const y = Math.random() * (window.innerHeight - size);
+            circle.style.left = `${x}px`;
+            circle.style.top = `${y}px`;
+
+            circle.addEventListener('click', (event) => {
+                event.stopPropagation(); 
+                score++;
+                scoreDisplay.textContent = score;
+                document.body.removeChild(circle);
+                createCircle(); 
+            });
+
+            document.body.appendChild(circle);
+        }
+
+        function update() {
+            const now = performance.now();
+            if (now - lastClickTime > 5000) { 
+                spinSpeed = Math.min(spinSpeed + 0.01, 1); 
+                image.style.animationDuration = `${spinSpeed}s`;
+                speedDisplay.textContent = spinSpeed.toFixed(2);
+            }
+
+            fps = Math.round(1000 / (now - lastTimestamp));
+            fpsDisplay.textContent = fps;
+            lastTimestamp = now;
+
+            requestAnimationFrame(update);
+        }
+
+        createCircle(); 
+        update(); 
+    </script>
+</body>
+</html>
